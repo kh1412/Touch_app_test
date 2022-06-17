@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" >
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/root"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#2A5319"
+        tools:viewBindingIgnore="true"
+        tools:context=".MainActivity">
+
+        <TextView
+            android:id="@+id/ring"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/background_ring"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text01"
+            android:layout_width="140dp"
+            android:layout_height="60dp"
+            android:text="Motion Sensor"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.3"
+            app:layout_constraintHorizontal_bias="0.7"/>
+        <TextView
+            android:id="@+id/text02"
+            android:layout_width="140dp"
+            android:layout_height="60dp"
+            android:text="Motion Event"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.55"
+            app:layout_constraintHorizontal_bias="0.7"/>
+        <TextView
+            android:id="@+id/text03"
+            android:layout_width="140dp"
+            android:layout_height="60dp"
+            android:text="Gesture"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.75"
+            app:layout_constraintHorizontal_bias="0.7"/>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
