@@ -66,6 +66,16 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.6"
             app:layout_constraintHorizontal_bias="1.0"/>
+        <TextView
+            android:id="@+id/text05"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:text="text: "
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.8"/>
 
         <!--円周上の白丸-->
         <View

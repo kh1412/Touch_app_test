@@ -24,6 +24,7 @@ public class MainActivity extends Activity {
     private TextView text_inputArea;
     private TextView text_gesture;
     private TextView text_gesture2;
+    private TextView text_text;
     private ArrayList<TextView> dispCharacter = new ArrayList<TextView>();
     private ActivityMainBinding binding;
     //Gesture(touch)
@@ -31,6 +32,7 @@ public class MainActivity extends Activity {
 
     private int state;
     int down_position = -1;
+    String input_text = "";
     /*
     //Display size ----- Galaxy Watch
     int watch_width = 396;
@@ -53,6 +55,7 @@ public class MainActivity extends Activity {
         text_inputArea = binding.text02;
         text_gesture = binding.text03;
         text_gesture2 = binding.text04;
+        text_text = binding.text05;
         Drawable drawable_defo = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_white_icon, null);
         Drawable drawable_selected = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_selected, null);
         mGestureDetector = new GestureDetector(this, mGestureListener);
@@ -90,6 +93,7 @@ public class MainActivity extends Activity {
         mGestureDetector.onTouchEvent(event);
         Drawable drawable_defo = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_white_icon, null);
         Drawable drawable_selected = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_selected, null);
+        Kana_Character kana = new Kana_Character();
         float max_width = watch_width/2;
         float max_height = watch_height/2;
         //X座標の取得
@@ -219,12 +223,19 @@ public class MainActivity extends Activity {
                         }
                     }
                 }
+
                 break;
             case MotionEvent.ACTION_MOVE:
                 text_gesture2.setText("Moving");
                 break;
             case MotionEvent.ACTION_UP:
                 text_gesture2.setText("Tap Up");
+                /*
+                if(selected_num-down_position > 0 && selected_num-down_position < 5){
+                    text_text.append(kana.set(down_position,selected_num-down_position));
+                }
+
+                 */
                 state = 0;
                 break;
             case MotionEvent.ACTION_CANCEL:
@@ -235,7 +246,6 @@ public class MainActivity extends Activity {
         //円周上に表示
         int num = 12;
         int radius = watch_width/2 - 20;
-        Kana_Character kana = new Kana_Character();
         TextView textView;
         if (state == 1){
             for (int i = 0; i < num; i++) {
@@ -266,8 +276,6 @@ public class MainActivity extends Activity {
                 }
             }
         }
-
-
 
         return super.onTouchEvent(event);
     }
