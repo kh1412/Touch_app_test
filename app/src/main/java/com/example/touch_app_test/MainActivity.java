@@ -93,7 +93,9 @@ public class MainActivity extends Activity {
         mGestureDetector.onTouchEvent(event);
         Drawable drawable_defo = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_white_icon, null);
         Drawable drawable_selected = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_selected, null);
+        TextView textView;
         Kana_Character kana = new Kana_Character();
+        int num = 12;
         float max_width = watch_width/2;
         float max_height = watch_height/2;
         //X座標の取得
@@ -202,6 +204,7 @@ public class MainActivity extends Activity {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 text_gesture2.setText("Tap Down");
+                state = 1;
                 if(r > max_width - 50){
                     for(int i=0; i<12; i++){
                         if(i == 0){
@@ -230,13 +233,19 @@ public class MainActivity extends Activity {
                 break;
             case MotionEvent.ACTION_UP:
                 text_gesture2.setText("Tap Up");
-                /*
-                if(selected_num-down_position > 0 && selected_num-down_position < 5){
+                if(selected_num-down_position > -1 && selected_num-down_position < 5){
                     text_text.append(kana.set(down_position,selected_num-down_position));
                 }
-
-                 */
                 state = 0;
+                for (int i = 0; i < num; i++) {
+                    textView = dispCharacter.get(i);//数字(i番目)表示
+                    if(i < kana.kana.length){
+                        textView.setText(kana.set(i,0));
+                    }else{
+                        textView.setText("");
+                    }
+                    textView.setTextColor(Color.BLACK);
+                }
                 break;
             case MotionEvent.ACTION_CANCEL:
                 text_gesture2.setText("Cancel");
@@ -244,9 +253,7 @@ public class MainActivity extends Activity {
         }
 
         //円周上に表示
-        int num = 12;
         int radius = watch_width/2 - 20;
-        TextView textView;
         if (state == 1){
             for (int i = 0; i < num; i++) {
                 if(i > num){
@@ -264,7 +271,6 @@ public class MainActivity extends Activity {
                 }else{
                     textView.setText("");
                 }
-                textView.setTextColor(Color.BLACK);
             }
         }else{
             for (int i = 0; i < num; i++) {
@@ -291,7 +297,7 @@ public class MainActivity extends Activity {
         public boolean onDoubleTapEvent(MotionEvent e) {
             text_gesture.setText("Moving -> Double Tap");
             //binding.circleView00.setBackground(drawable_selected);
-            state = 1;
+            //state = 1;
             return true;
         }
 
