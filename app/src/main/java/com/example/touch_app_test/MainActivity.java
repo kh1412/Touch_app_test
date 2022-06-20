@@ -33,6 +33,7 @@ public class MainActivity extends Activity {
     private int state;
     int down_position = -1;
     String input_text = "";
+    String set_character = "";
     /*
     //Display size ----- Galaxy Watch
     int watch_width = 396;
@@ -233,9 +234,25 @@ public class MainActivity extends Activity {
                 break;
             case MotionEvent.ACTION_UP:
                 text_gesture2.setText("Tap Up");
-                if(selected_num-down_position > -1 && selected_num-down_position < 5){
-                    text_text.append(kana.set(down_position,selected_num-down_position));
+                if(selected_num >= 0 && selected_num <= 11){
+                    if(selected_num - down_position >= 0){
+                        if(selected_num - down_position < kana.kana[down_position].length){
+                            set_character = kana.set(down_position,selected_num-down_position);
+                        }
+                    }else{
+                        if(selected_num - down_position + num < kana.kana[down_position].length){
+                            set_character = kana.set(down_position,selected_num-down_position + num);
+                        }
+                    }
                 }
+                String tmp_text;
+                if(set_character == "削除"){
+                    tmp_text = text_text.getText().toString();
+                    text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                }else{
+                    text_text.append(set_character);
+                }
+
                 state = 0;
                 for (int i = 0; i < num; i++) {
                     textView = dispCharacter.get(i);//数字(i番目)表示
