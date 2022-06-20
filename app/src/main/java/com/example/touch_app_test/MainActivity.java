@@ -3,11 +3,13 @@ package com.example.touch_app_test;
 import static java.lang.Math.toDegrees;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -15,6 +17,12 @@ import androidx.core.content.res.ResourcesCompat;
 
 import com.example.touch_app_test.databinding.ActivityMainBinding;
 
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 
@@ -32,8 +40,9 @@ public class MainActivity extends Activity {
 
     private int state;
     int down_position = -1;
-    String input_text = "";
+    StringBuilder log_text = new StringBuilder();
     String set_character = "";
+    private String filename = "Test.csv";
     /*
     //Display size ----- Galaxy Watch
     int watch_width = 396;
@@ -57,6 +66,7 @@ public class MainActivity extends Activity {
         text_gesture = binding.text03;
         text_gesture2 = binding.text04;
         text_text = binding.text05;
+        Button button = binding.button;
         Drawable drawable_defo = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_white_icon, null);
         Drawable drawable_selected = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_selected, null);
         mGestureDetector = new GestureDetector(this, mGestureListener);
@@ -80,6 +90,26 @@ public class MainActivity extends Activity {
             binding.root.addView(textView);
             dispCharacter.add(textView);
         }
+
+        //buttonを押したときの処理
+        button.setOnClickListener( v -> {
+            try {
+                FileOutputStream fos = openFileOutput(filename, Context.MODE_APPEND);
+                OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
+                BufferedWriter bw = new BufferedWriter(osw);
+
+                bw.write(String.format("Log_Input\n"));
+                bw.write(String.format(String.valueOf(log_text)));
+                log_text.delete(0,log_text.length());
+                text_text.setText("");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } ;
+        });
     }
 
     //num of circle
@@ -245,6 +275,7 @@ public class MainActivity extends Activity {
                         }
                     }
                 }
+                log_text.append(set_character);
                 String tmp_text;
                 if(set_character == "削除"){
                     tmp_text = text_text.getText().toString();
