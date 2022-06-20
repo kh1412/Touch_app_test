@@ -7,6 +7,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.Button;
@@ -39,6 +40,7 @@ public class MainActivity extends Activity {
     private GestureDetector mGestureDetector;
 
     private int state;
+    int selected_num_prev = 0;
     int down_position = -1;
     StringBuilder log_text = new StringBuilder();
     String set_character = "";
@@ -47,10 +49,13 @@ public class MainActivity extends Activity {
     //Display size ----- Galaxy Watch
     int watch_width = 396;
     int watch_height = 396;
-    */
     //Display size ----- virtual
     int watch_width = 384;
     int watch_height = 384;
+    */
+    //Display size ----- Sunto 7
+    int watch_width = 454;
+    int watch_height = 454;
 
 
     @Override
@@ -73,7 +78,7 @@ public class MainActivity extends Activity {
 
         //円周上に表示
         int num = 12;
-        int radius = watch_width/2 - 20;
+        int radius = watch_width/2 - 25;
         Kana_Character kana = new Kana_Character();
         for (int i = 0; i < num; i++) {
             TextView textView = new TextView(this);
@@ -123,6 +128,7 @@ public class MainActivity extends Activity {
 
     public boolean onTouchEvent(MotionEvent event) {
         mGestureDetector.onTouchEvent(event);
+        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         Drawable drawable_defo = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_white_icon, null);
         Drawable drawable_selected = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_selected, null);
         TextView textView;
@@ -168,6 +174,10 @@ public class MainActivity extends Activity {
                     }
                 }
             }
+        }
+        if(selected_num != selected_num_prev){
+            selected_num_prev = selected_num;
+            vibrator.vibrate(50);
         }
 
         text_selectNum.setText(String.valueOf(selected_num));
