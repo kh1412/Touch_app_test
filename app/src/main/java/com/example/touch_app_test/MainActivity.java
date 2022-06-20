@@ -98,10 +98,11 @@ public class MainActivity extends Activity {
                 OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
                 BufferedWriter bw = new BufferedWriter(osw);
 
-                bw.write(String.format("Log_Input\n"));
-                bw.write(String.format(String.valueOf(log_text)));
+                bw.write(String.format("Log_Input: "));
+                bw.write(String.format(String.valueOf(log_text)) + "\n");
                 log_text.delete(0,log_text.length());
-                text_text.setText("");
+                text_text.setText("text: ");
+                bw.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (UnsupportedEncodingException e) {
