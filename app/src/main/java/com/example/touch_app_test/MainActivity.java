@@ -288,9 +288,12 @@ public class MainActivity extends Activity {
                 }
                 log_text.append(set_character);
                 String tmp_text;
+                tmp_text = text_text.getText().toString();
                 if(set_character == "削除"){
-                    tmp_text = text_text.getText().toString();
                     text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                }else if(set_character == "小" && tmp_text.endsWith("つ") == true){
+                    text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                    text_text.append("っ");
                 }else{
                     text_text.append(set_character);
                 }
