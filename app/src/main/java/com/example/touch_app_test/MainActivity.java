@@ -40,8 +40,10 @@ public class MainActivity extends Activity {
     private GestureDetector mGestureDetector;
 
     private int state;
+    int selected_num = -1;
     int selected_num_prev = 0;
     int down_position = -1;
+    int inring = 0;
     StringBuilder log_text = new StringBuilder();
     String set_character = "";
     private String filename = "Test.csv";
@@ -145,7 +147,10 @@ public class MainActivity extends Activity {
         double theta = Math.atan2(x_coor,y_coor);
         double degree = toDegrees(theta);
 
-        if(r > max_width - 50){
+        //タッチ領域
+        double ring_thikness = max_height - 80;
+
+        if(r > ring_thikness){
             text_inputArea.setText("Input Area");
         }else{
             text_inputArea.setText("Not Area");
@@ -153,8 +158,9 @@ public class MainActivity extends Activity {
 
         //degree表示(角度)
         //text_sensorval.setText(String.valueOf(degree));
-        int selected_num = -1;
-        if(r > max_width - 50){
+
+        if(r > ring_thikness){
+            inring = 1;
             for(int i=0; i<12; i++){
                 if(i == 0){
                     if(degree <= 15 || degree > -15){
@@ -174,6 +180,8 @@ public class MainActivity extends Activity {
                     }
                 }
             }
+        }else{
+            inring = 0;
         }
         if(selected_num != selected_num_prev){
             selected_num_prev = selected_num;
@@ -246,8 +254,7 @@ public class MainActivity extends Activity {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 text_gesture2.setText("Tap Down");
-                state = 1;
-                if(r > max_width - 50){
+                if(inring == 1){
                     for(int i=0; i<12; i++){
                         if(i == 0){
                             if(degree <= 15 || degree > -15){
@@ -267,38 +274,47 @@ public class MainActivity extends Activity {
                             }
                         }
                     }
+                }else{
+                    down_position = -1;
                 }
-
+                selected_num = down_position;
                 break;
             case MotionEvent.ACTION_MOVE:
                 text_gesture2.setText("Moving");
                 break;
             case MotionEvent.ACTION_UP:
                 text_gesture2.setText("Tap Up");
-                if(selected_num >= 0 && selected_num <= 11){
-                    if(selected_num - down_position >= 0){
-                        if(selected_num - down_position < kana.kana[down_position].length){
-                            set_character = kana.set(down_position,selected_num-down_position);
-                        }
-                    }else{
-                        if(selected_num - down_position + num < kana.kana[down_position].length){
-                            set_character = kana.set(down_position,selected_num-down_position + num);
+                if(inring == 1 && down_position != -1 && selected_num != -1){
+                    if(selected_num >= 0 && selected_num <= 11){
+                        if(selected_num - down_position >= 0){
+                            if(selected_num - down_position < kana.kana[down_position].length){
+                                set_character = kana.set(down_position,selected_num-down_position);
+                            }
+                        }else{
+                            if(selected_num - down_position + num < kana.kana[down_position].length){
+                                set_character = kana.set(down_position,selected_num-down_position + num);
+                            }
                         }
                     }
-                }
-                log_text.append(set_character);
-                String tmp_text;
-                tmp_text = text_text.getText().toString();
-                if(set_character == "削除"){
-                    text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
-                }else if(set_character == "小" && tmp_text.endsWith("つ") == true){
-                    text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
-                    text_text.append("っ");
-                }else{
-                    text_text.append(set_character);
+
+                    log_text.append(set_character);
+                    String tmp_text;
+                    tmp_text = text_text.getText().toString();
+                    if(set_character == "削除"){
+                        text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                    }else if(set_character == "小" && tmp_text.endsWith("つ") == true){
+                        text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                        text_text.append("っ");
+                    }else{
+                        text_text.append(set_character);
+                    }
                 }
 
-                state = 0;
+                //layout初期化
+                inring = 0;
+                down_position = -1;
+                selected_num = -1;
+                selected_num_prev = -1;
                 for (int i = 0; i < num; i++) {
                     textView = dispCharacter.get(i);//数字(i番目)表示
                     if(i < kana.kana.length){
@@ -315,8 +331,7 @@ public class MainActivity extends Activity {
         }
 
         //円周上に表示
-        int radius = watch_width/2 - 20;
-        if (state == 1){
+        if (down_position != -1){
             for (int i = 0; i < num; i++) {
                 if(i > num){
                     textView = dispCharacter.get(i-12);//数字(i番目)表示
