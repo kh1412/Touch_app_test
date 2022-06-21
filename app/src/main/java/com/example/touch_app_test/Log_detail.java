@@ -21,5 +21,5 @@ public class Log_detail {
 
     //入力文字
     String select_char;
-    StringBuilder text = new StringBuilder();
+    String text;
 }

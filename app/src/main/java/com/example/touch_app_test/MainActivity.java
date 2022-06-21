@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
     int selected_num_prev = 0;
     int down_position = -1;
     int inring = 0;
-    StringBuilder log_text = new StringBuilder();
+    String log_text = "";
     ArrayList<Log_detail> log_details = new ArrayList<Log_detail>();
     Log_detail log_detail_tmp = new Log_detail();
     String set_character = "";
@@ -140,7 +140,7 @@ public class MainActivity extends Activity {
                 }
                 bw2.close();
                 log_details.clear();
-                log_text.delete(0,log_text.length());
+                log_text = "";
                 text_text.setText("text: ");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -341,7 +341,7 @@ public class MainActivity extends Activity {
                         }
                     }
 
-                    log_text.append(set_character);
+                    log_text = log_text + set_character;
                     String tmp_text;
                     tmp_text = text_text.getText().toString();
                     if(set_character == "削除"){
@@ -368,7 +368,7 @@ public class MainActivity extends Activity {
                     log_detail_tmp.up_pc.r = r;
                     log_detail_tmp.up_pc.theta = theta;
                     log_detail_tmp.select_char = set_character;
-                    log_detail_tmp.text = String.copyValueOf(log_text.toC);
+                    log_detail_tmp.text = log_text;
                     log_details.add(log_detail_tmp);
                     log_detail_tmp = new Log_detail();
                 }
