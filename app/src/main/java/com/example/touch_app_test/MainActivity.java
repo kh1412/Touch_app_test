@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.Button;
@@ -24,7 +25,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 public class MainActivity extends Activity {
@@ -45,6 +51,8 @@ public class MainActivity extends Activity {
     int down_position = -1;
     int inring = 0;
     StringBuilder log_text = new StringBuilder();
+    ArrayList<Log_detail> log_details = new ArrayList<Log_detail>();
+    Log_detail log_detail_tmp = new Log_detail();
     String set_character = "";
     private String filename = "Test.csv";
     /*
@@ -107,14 +115,40 @@ public class MainActivity extends Activity {
 
                 bw.write(String.format("Log_Input: "));
                 bw.write(String.format(String.valueOf(log_text)) + "\n");
+                bw.close();
+                text_text.setText("wait");
+
+                log_details.get(log_details.size()-1).lastup = log_details.get(log_details.size()-1).uptime;
+                SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
+                Date begin = df.parse(log_details.get(log_details.size()-1).firstdown);
+                Date end = df.parse(log_details.get(log_details.size()-1).lastup);
+                log_details.get(log_details.size()-1).input_duration = end.getTime() - begin.getTime();
+                log_details.get(log_details.size()-1).text = log_text;
+
+                FileOutputStream fos2 = openFileOutput(filename+"_detail", Context.MODE_APPEND);
+                OutputStreamWriter osw2 = new OutputStreamWriter(fos2, "UTF-8");
+                BufferedWriter bw2 = new BufferedWriter(osw2);
+                bw2.write(String.format(String.valueOf(log_text)) + "\n");
+                bw2.write(String.format("text,char,InputDuration,FirstDown,LastUp,TouchDuration,DownTime,UpTime,DownPosition,r,theta,UpPosition,r,theta\n"));
+                for(int i=0;i<log_details.size();i++){
+                    bw2.write(String.format("%s,%s", log_details.get(i).text, log_details.get(i).select_char));
+                    bw2.write(String.format("%d,%s,%s", log_details.get(i).input_duration, log_details.get(i).firstdown, log_details.get(i).lastup));
+                    bw2.write(String.format("%d,%s,%s", log_details.get(i).touch_duration, log_details.get(i).downtime, log_details.get(i).uptime));
+                    bw2.write(String.format("%d,%s,%s", log_details.get(i).down_position, log_details.get(i).down_pc.r, log_details.get(i).down_pc.theta));
+                    bw2.write(String.format("%d,%s,%s", log_details.get(i).up_position, log_details.get(i).up_pc.r, log_details.get(i).up_pc.theta));
+                    bw2.write("\n");
+                }
+                bw2.close();
+                log_details.clear();
                 log_text.delete(0,log_text.length());
                 text_text.setText("text: ");
-                bw.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ParseException e) {
                 e.printStackTrace();
             } ;
         });
@@ -278,6 +312,16 @@ public class MainActivity extends Activity {
                     down_position = -1;
                 }
                 selected_num = down_position;
+
+                if(log_detail_tmp.downtime == null){
+                    if(log_detail_tmp.firstdown == null){
+                        log_detail_tmp.firstdown = getDate();
+                    }
+                    log_detail_tmp.downtime = getDate();
+                    log_detail_tmp.down_position = down_position;
+                    log_detail_tmp.down_pc.r = r;
+                    log_detail_tmp.down_pc.theta = theta;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 text_gesture2.setText("Moving");
@@ -310,6 +354,25 @@ public class MainActivity extends Activity {
                     }
                 }
 
+                if(log_detail_tmp.uptime == null){
+                    log_detail_tmp.uptime = getDate();
+                    SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
+                    try {
+                        Date begin = df.parse(log_detail_tmp.downtime);
+                        Date end = df.parse(log_detail_tmp.uptime);
+                        log_detail_tmp.touch_duration = end.getTime() - begin.getTime();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    log_detail_tmp.up_position = selected_num;
+                    log_detail_tmp.up_pc.r = r;
+                    log_detail_tmp.up_pc.theta = theta;
+                    log_detail_tmp.select_char = set_character;
+                    log_detail_tmp.text = String.copyValueOf(log_text.toC);
+                    log_details.add(log_detail_tmp);
+                    log_detail_tmp = new Log_detail();
+                }
+
                 //layout初期化
                 inring = 0;
                 down_position = -1;
@@ -328,6 +391,8 @@ public class MainActivity extends Activity {
             case MotionEvent.ACTION_CANCEL:
                 text_gesture2.setText("Cancel");
                 break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + event.getAction());
         }
 
         //円周上に表示
@@ -417,4 +482,17 @@ public class MainActivity extends Activity {
             return false;
         }
     };
+
+    //時間取得
+    public static String getDate(){
+
+        //取得する日時のフォーマットを指定
+        final DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
+
+        //時刻をミリ秒で取得
+        final Date date = new Date(System.currentTimeMillis());
+
+        //日時を指定したフォーマットで取得
+        return df.format(date);
+    }
 }
