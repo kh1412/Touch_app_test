@@ -11,7 +11,7 @@ public class Log_detail {
 
     class PolarCoordinate{
         double r;
-        double theta;
+        double degree;
     }
     //タッチ位置
     int down_position;
