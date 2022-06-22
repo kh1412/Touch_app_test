@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
     ArrayList<Log_detail> log_details = new ArrayList<Log_detail>();
     Log_detail log_detail_tmp = new Log_detail();
     String set_character = "";
-    private String filename = "Test.csv";
+    private String filename = "hino2.csv";
     /*
     //Display size ----- Galaxy Watch
     int watch_width = 396;
