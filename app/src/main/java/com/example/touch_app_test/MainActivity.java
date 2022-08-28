@@ -24,7 +24,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 public class MainActivity extends Activity {
@@ -44,7 +48,9 @@ public class MainActivity extends Activity {
     int selected_num_prev = 0;
     int down_position = -1;
     int inring = 0;
-    StringBuilder log_text = new StringBuilder();
+    String log_text = "";
+    ArrayList<Log_detail> log_details = new ArrayList<Log_detail>();
+    Log_detail log_detail_tmp = new Log_detail();
     String set_character = "";
     private String filename = "Test.csv";
     /*
@@ -107,14 +113,44 @@ public class MainActivity extends Activity {
 
                 bw.write(String.format("Log_Input: "));
                 bw.write(String.format(String.valueOf(log_text)) + "\n");
-                log_text.delete(0,log_text.length());
-                text_text.setText("text: ");
                 bw.close();
+                //text_text.setText("");
+
+                FileOutputStream fos2 = openFileOutput("Log_"+filename, Context.MODE_APPEND);
+                OutputStreamWriter osw2 = new OutputStreamWriter(fos2, "windows-31j");
+                BufferedWriter bw2 = new BufferedWriter(osw2);
+                bw2.write(String.format(String.valueOf(log_text)) + "\n");
+                bw2.write(String.format("text,char,InputDuration,FirstDown,LastUp,TouchDuration,DownTime,UpTime,DownPosition,r,theta,UpPosition,r,theta\n"));
+                if(log_details.size() == 0){
+                    bw2.write(String.format("Empty"));
+                }else{
+                    log_details.get(log_details.size()-1).lastup = log_details.get(log_details.size()-1).uptime;
+                    SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
+                    Date begin = df.parse(log_details.get(log_details.size()-1).firstdown);
+                    Date end = df.parse(log_details.get(log_details.size()-1).lastup);
+                    log_details.get(log_details.size()-1).input_duration = end.getTime() - begin.getTime();
+                    log_details.get(log_details.size()-1).text = log_text;
+                    for(int i=0;i<log_details.size();i++){
+                        bw2.write(String.format("%s,%s,", log_details.get(i).text, log_details.get(i).select_char));
+                        bw2.write(String.format("%d,%s,%s,", log_details.get(i).input_duration, log_details.get(i).firstdown, log_details.get(i).lastup));
+                        bw2.write(String.format("%d,%s,%s,", log_details.get(i).touch_duration, log_details.get(i).downtime, log_details.get(i).uptime));
+                        bw2.write(String.format("%d,%s,%s,", log_details.get(i).down_position, log_details.get(i).down_pc.r, log_details.get(i).down_pc.degree));
+                        bw2.write(String.format("%d,%s,%s", log_details.get(i).up_position, log_details.get(i).up_pc.r, log_details.get(i).up_pc.degree));
+                        bw2.write("\n");
+                    }
+                }
+
+                bw2.close();
+                log_details.clear();
+                log_text = "";
+                text_text.setText("");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ParseException e) {
                 e.printStackTrace();
             } ;
         });
@@ -278,6 +314,18 @@ public class MainActivity extends Activity {
                     down_position = -1;
                 }
                 selected_num = down_position;
+
+                if(log_detail_tmp.downtime == null){
+                    if(log_details.size() == 0){
+                        log_detail_tmp.firstdown = getDate();
+                    }else{
+                        log_detail_tmp.firstdown = log_details.get(0).firstdown;
+                    }
+                    log_detail_tmp.downtime = getDate();
+                    log_detail_tmp.down_position = down_position;
+                    log_detail_tmp.down_pc.r = r;
+                    log_detail_tmp.down_pc.degree = degree;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 text_gesture2.setText("Moving");
@@ -297,17 +345,67 @@ public class MainActivity extends Activity {
                         }
                     }
 
-                    log_text.append(set_character);
+
                     String tmp_text;
                     tmp_text = text_text.getText().toString();
-                    if(set_character == "削除"){
-                        text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
-                    }else if(set_character == "小" && tmp_text.endsWith("つ") == true){
-                        text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
-                        text_text.append("っ");
+                    if(set_character == "削除"){ //削除
+                        if(tmp_text.length()-1 >= 0){
+                            text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                        }
+                    }else if(set_character == kana.set(10,0)){ //小
+                        if(tmp_text.length()-1 >= 0){
+                            if(tmp_text.endsWith("つ") == true){ //つ
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("っ");
+                            }else if(tmp_text.endsWith("や") == true){ //や
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("ゃ");
+                            }else if(tmp_text.endsWith("ゆ") == true){
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("ゅ");
+                            }else if(tmp_text.endsWith("よ") == true){
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("ょ");
+                            }else if(tmp_text.endsWith("あ") == true){ //あ
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("ぁ");
+                            }else if(tmp_text.endsWith("い") == true){
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("ぃ");
+                            }else if(tmp_text.endsWith("う") == true){
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("ぅ");
+                            }else if(tmp_text.endsWith("え") == true){
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("ぇ");
+                            }else if(tmp_text.endsWith("お") == true){
+                                text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                text_text.append("ぉ");
+                            }
+                        }
                     }else{
                         text_text.append(set_character);
                     }
+                    log_text = text_text.getText().toString();
+                }
+
+                if(log_detail_tmp.uptime == null){
+                    log_detail_tmp.uptime = getDate();
+                    SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
+                    try {
+                        Date begin = df.parse(log_detail_tmp.downtime);
+                        Date end = df.parse(log_detail_tmp.uptime);
+                        log_detail_tmp.touch_duration = end.getTime() - begin.getTime();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    log_detail_tmp.up_position = selected_num;
+                    log_detail_tmp.up_pc.r = r;
+                    log_detail_tmp.up_pc.degree = degree;
+                    log_detail_tmp.select_char = set_character;
+                    log_detail_tmp.text = text_text.getText().toString();;
+                    log_details.add(log_detail_tmp);
+                    log_detail_tmp = new Log_detail();
                 }
 
                 //layout初期化
@@ -328,6 +426,8 @@ public class MainActivity extends Activity {
             case MotionEvent.ACTION_CANCEL:
                 text_gesture2.setText("Cancel");
                 break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + event.getAction());
         }
 
         //円周上に表示
@@ -417,4 +517,17 @@ public class MainActivity extends Activity {
             return false;
         }
     };
+
+    //時間取得
+    public static String getDate(){
+
+        //取得する日時のフォーマットを指定
+        final DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
+
+        //時刻をミリ秒で取得
+        final Date date = new Date(System.currentTimeMillis());
+
+        //日時を指定したフォーマットで取得
+        return df.format(date);
+    }
 }
