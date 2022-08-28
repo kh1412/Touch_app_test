@@ -4,11 +4,13 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/Kaito/AndroidStudioProjects/Touch_app_test/app/src/main/res/drawable/background_ring.xml" value="0.123" />
+        <entry key="..\:/Users/Kaito/AndroidStudioProjects/Touch_app_test/app/src/main/res/drawable/circle_selected.xml" value="0.116" />
+        <entry key="..\:/Users/Kaito/AndroidStudioProjects/Touch_app_test/app/src/main/res/drawable/circle_white_icon.xml" value="0.131" />
         <entry key="..\:/Users/Kaito/AndroidStudioProjects/Touch_app_test/app/src/main/res/layout/activity_main.xml" value="0.5198237885462555" />
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">
