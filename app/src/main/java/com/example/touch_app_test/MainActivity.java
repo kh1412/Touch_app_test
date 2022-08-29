@@ -98,8 +98,8 @@ public class MainActivity extends Activity {
             layoutParams.circleRadius = radius; // 半径を指定(dp)
             textView.setLayoutParams(layoutParams);
             textView.setText(String.valueOf(i)); //数字(i番目)表示
-            textView.setText(kana.set(i,0));
-            textView.setTextColor(Color.BLACK);
+            textView.setText(kana.set(i,0)); //文字表示
+            textView.setTextColor(Color.BLACK); //文字の色
             binding.root.addView(textView);
             dispCharacter.add(textView);
         }
