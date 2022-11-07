@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    compileSdk 30
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.touch_app_test"
@@ -24,6 +24,7 @@ android {
         viewBinding true
         dataBinding true
     }
+    namespace 'com.example.touch_app_test'
 }
 
 dependencies {
