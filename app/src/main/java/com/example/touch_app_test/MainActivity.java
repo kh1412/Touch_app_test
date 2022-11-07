@@ -6,6 +6,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.view.GestureDetector;
@@ -42,6 +44,29 @@ public class MainActivity extends Activity {
     private ActivityMainBinding binding;
     //Gesture(touch)
     private GestureDetector mGestureDetector;
+    //acc & gyr sensor
+    private SensorManager mSensorManager;
+    private Sensor acc_sensor;
+    private Sensor gyr_sensor;
+    private Sensor gravity_sensor;
+    private int button_flag = 0; //1でスタート,2で終わり
+    static ArrayList<Values> acc_save = new ArrayList<Values>(); //acc値保存
+    static ArrayList<Values> gyr_save = new ArrayList<Values>(); //gyr値保存
+    float t1,t2; //時間の一時保存用
+    float tx1,ty1,tz1,tx2,ty2,tz2; //センサ値の一時保存用
+    long starttime; //計測開始時間(基準時間)
+    int i = 0;
+
+    float diffaccx = 0;
+    float diffaccy = 0;
+    float accx_prev = 0;
+    float accy_prev = 0;
+
+    private String person_name = "test";
+    private String filename = "Test.csv";
+
+    public Flag flag = new Flag();
+    public Count count = new Count();
 
     private int state;
     int selected_num = -1;
