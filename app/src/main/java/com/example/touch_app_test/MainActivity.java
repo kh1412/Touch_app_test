@@ -1,5 +1,6 @@
 package com.example.touch_app_test;
 
+import static com.google.android.gms.wearable.DataMap.TAG;
 import static java.lang.Math.toDegrees;
 
 import android.app.Activity;
@@ -7,9 +8,12 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.Button;
@@ -30,10 +34,12 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity  implements  SensorEventListener{
     //layout
     private TextView text_selectNum;
     private TextView text_inputArea;
@@ -44,6 +50,7 @@ public class MainActivity extends Activity {
     private ActivityMainBinding binding;
     //Gesture(touch)
     private GestureDetector mGestureDetector;
+    //2022/11/07追加 start
     //acc & gyr sensor
     private SensorManager mSensorManager;
     private Sensor acc_sensor;
@@ -67,6 +74,7 @@ public class MainActivity extends Activity {
 
     public Flag flag = new Flag();
     public Count count = new Count();
+    //2022/11/07追加 end
 
     private int state;
     int selected_num = -1;
@@ -77,7 +85,6 @@ public class MainActivity extends Activity {
     ArrayList<Log_detail> log_details = new ArrayList<Log_detail>();
     Log_detail log_detail_tmp = new Log_detail();
     String set_character = "";
-    private String filename = "hino2.csv";
     /*
     //Display size ----- Galaxy Watch
     int watch_width = 396;
@@ -90,6 +97,131 @@ public class MainActivity extends Activity {
     int watch_width = 454;
     int watch_height = 454;
 
+    class getValueThread extends Thread {
+        @Override
+        public void run() {
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+            int sec=0;
+            int ss=0;
+            int prev_ss = 0;
+            float runningtime = 0;
+            float motion_end_time = 0;
+            String result = "";
+            float prev=0;
+            flag.InitializeFlag();
+            count.InitializeCount();
+
+            //閾値設定
+            Threshold threshold = new Threshold();
+
+            //時間
+            cal.setTime(new Date());
+            sec = cal.get(Calendar.SECOND);
+            ss = cal.get(Calendar.MILLISECOND);
+            prev = (float)sec+((float)ss/1000);
+
+            //Sensor値
+            Values acc_val = new Values();
+            Values gyr_val = new Values();
+
+            TmpValue motion_val = new TmpValue();
+
+
+            while(true){
+                //現在時刻取得
+                cal.setTime(new Date());
+                sec = cal.get(Calendar.SECOND);
+                ss = cal.get(Calendar.MILLISECOND);
+
+                if(ss % 10 == 0 && prev_ss != ss){
+                    //稼働時間算出
+                    if((float)sec+((float)ss/1000) - prev < 0){
+                        runningtime += 60 - prev + (float)sec+((float)ss/1000);
+                    }else{
+                        runningtime += (float)sec+((float)ss/1000) - prev;
+                    }
+                    prev = (float)sec+((float)ss/1000);
+                    prev_ss = ss;
+
+                    diffaccx = tx1 - accx_prev;
+                    diffaccy = ty1 - accy_prev;
+
+                    acc_val.set(runningtime, diffaccx, diffaccy, tz1);
+                    gyr_val.set(runningtime, tx2, ty2, tz2);
+
+                    Detector_motion_start motion_start = new Detector_motion_start(acc_val, gyr_val, threshold, flag);
+                    Detector_motion_end motion_end = new Detector_motion_end(motion_val, flag, threshold);
+
+                    //判別アルゴリズム_start
+                    if(flag.motion.motion == 0){
+                        if(motion_start.DetectMotion() == 1){
+                            Log.d(TAG, "start");
+                            motion_val.addValues(acc_val, gyr_val);
+                            //flag.motion.motion = 1;
+                            flag.count++;
+                        }
+                    }else if(flag.motion.motion == 1){
+                        motion_val.addValues(acc_val, gyr_val);
+                        flag.count++;
+                        //判別結果
+                        result = motion_end.DetectMotionEnd();
+                        if(result != ""){
+                            if(result == "Motion_long"){
+                                ((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(10);
+                            }else{
+                                flag.motion.motion = 2;
+                                motion_end_time = runningtime;
+                            }
+                        }
+                    }else if(flag.motion.motion == 2){
+                        if(runningtime - motion_end_time < threshold.interval){
+                            if(result=="LB"){
+                            }else if(result=="RB"){
+                            }else if(result=="RT"){
+                            }else if(result=="Ltw"){
+                            }else if(result=="Rtw"){
+                            }else if(result=="Up"){
+                            }else if(result=="Ltw_long"){
+                            }else if(result=="Rtw_long"){
+                            }else if(result=="Up_long"){
+                            }else if(result == "error"){
+                            }
+                        }else{
+                            Log.d(TAG, "end");
+                            motion_val.initValue();
+                            flag.InitializeFlag();
+                            if(result=="LB"){
+                                count.lb++;
+                            }else if(result=="RB"){
+                                count.rb++;
+                            }else if(result=="RT"){
+                                count.rt++;
+                            }else if(result=="Ltw"){
+                                count.ltw++;
+                            }else if(result=="Rtw"){
+                                count.rtw++;
+                            }else if(result=="Up"){
+                                count.up++;
+                            }else if(result=="Ltw_long"){
+                                count.ltw_l++;
+                            }else if(result=="Rtw_long"){
+                                count.rtw_l++;
+                            }else if(result=="Up_long"){
+                                count.up_l++;
+                            }
+                            result = "";
+                        }
+                    }
+                    accx_prev = tx1;
+                    accy_prev = ty1;
+
+                    acc_val = new Values();
+                    gyr_val = new Values();
+                }
+            }
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +229,14 @@ public class MainActivity extends Activity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.root);
+
+        //ジェスチャ
+        mSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        starttime = System.currentTimeMillis();
+
+        getValueThread thread1 = new getValueThread();
+        thread1.setPriority(8);
+        thread1.start();
 
         //state = 0;
         text_selectNum = binding.text01;
@@ -169,6 +309,53 @@ public class MainActivity extends Activity {
                 log_details.clear();
                 log_text = "";
                 text_text.setText("");
+
+                //ジェスチャ
+                int tmp_acc = 1;
+                int tmp_gyr = 1;
+                float time_diff = 0;
+                float time_tmp = 0;
+                float time_total = 0;
+
+                flag.InitializeFlag();
+                FileOutputStream fos3 = openFileOutput("acc&gyr_"+filename, Context.MODE_APPEND);
+                OutputStreamWriter osw3 = new OutputStreamWriter(fos3, "UTF-8");
+                BufferedWriter bw3 = new BufferedWriter(osw3);
+
+                bw3.write(String.format("size : %d\n", acc_save.size()));
+                bw3.write(String.format("LB,RB,RT,Ltw,Rtw,Up,Ltw_Long,Rtw_Long,Up_Long\n"));
+                bw3.write(String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+                        count.lb, count.rb, count.rt, count.ltw, count.rtw, count.up, count.ltw_l, count.rtw_l, count.up_l));
+                bw3.write("time_origin,timediff,time,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,diff_accx,diff_accy,xy_acc,integral_x,integral_y,integral_xy,integral_xy2" +
+                        ",integral_gyrx,integral_gyrz,tmp_acc,tmp_gyr,LB,RT,RB,R_tw,L_tw,Up\n");
+
+                count.InitializeCount();
+                for (i = 0; i < acc_save.size(); i++){
+                    t1 = acc_save.get(i).time;
+                    tx1 = acc_save.get(i).x;
+                    ty1 = acc_save.get(i).y;
+                    tz1 = acc_save.get(i).z;
+                    t2 = gyr_save.get(i).time;
+                    tx2 = gyr_save.get(i).x;
+                    ty2 = gyr_save.get(i).y;
+                    tz2 = gyr_save.get(i).z;
+
+                    //経過時間
+                    time_diff = t1 - time_tmp;
+                    if(time_diff < 0){
+                        time_diff += 60;
+                    }
+                    time_total += time_diff;
+                    if(i == 0){
+                        time_total = 0;
+                    }
+                    time_tmp = t1;
+
+                    bw3.write(String.format("%f,%f,%f,%f,%f,%f,%f,%f,%f \n",t1,time_diff,time_total,tx1,ty1,tz1,tx2,ty2,tz2));
+
+                }
+
+                bw3.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (UnsupportedEncodingException e) {
@@ -177,9 +364,55 @@ public class MainActivity extends Activity {
                 e.printStackTrace();
             } catch (ParseException e) {
                 e.printStackTrace();
-            } ;
+            }
+
+            acc_save.clear();
+            gyr_save.clear();
+
         });
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        acc_sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        gyr_sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mSensorManager.registerListener((SensorEventListener) this, acc_sensor, SensorManager.SENSOR_DELAY_FASTEST);
+        mSensorManager.registerListener((SensorEventListener) this, gyr_sensor, SensorManager.SENSOR_DELAY_FASTEST);
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSensorManager.unregisterListener((SensorEventListener) this, this.acc_sensor);
+        mSensorManager.unregisterListener((SensorEventListener) this, this.gyr_sensor);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            //スタートしていたら加速度記録
+            tx1 = event.values[0];
+            ty1 = event.values[1];
+            tz1 = event.values[2];
+
+        }
+
+        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            //スタートしていたら加速度記録
+            tx2 = event.values[0];
+            ty2 = event.values[1];
+            tz2 = event.values[2];
+        }
+
+        if(button_flag == 1) {
+            //mTextView.setText(String.format("LB:%d, LT:%d, RT:%d, RB:%d",count.lbtap, count.lttap, count.rttap, count.rbtap));
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
+
 
     //num of circle
     private static final int CIRCLE_RADIUS = 360;
