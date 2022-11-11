@@ -70,7 +70,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
     float accy_prev = 0;
 
     private String person_name = "test";
-    private String filename = "Test.csv";
+    private String filename = "Test01.csv";
 
     public Flag flag = new Flag();
     public Count count = new Count();
@@ -148,6 +148,10 @@ public class MainActivity extends Activity  implements  SensorEventListener{
 
                     acc_val.set(runningtime, diffaccx, diffaccy, tz1);
                     gyr_val.set(runningtime, tx2, ty2, tz2);
+
+                    //センサ値保存(書き込み用)
+                    acc_save.add(acc_val);
+                    gyr_save.add(gyr_val);
 
                     Detector_motion_start motion_start = new Detector_motion_start(acc_val, gyr_val, threshold, flag);
                     Detector_motion_end motion_end = new Detector_motion_end(motion_val, flag, threshold);
