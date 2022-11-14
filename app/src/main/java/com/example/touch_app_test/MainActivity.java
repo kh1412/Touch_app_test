@@ -79,7 +79,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
 
     private int state;
     int selected_num = -1;
-    int selected_num_prev = 0;
+    int selected_num_prev = -1;
     int down_position = -1;
     int inring = 0;
     String log_text = "";
@@ -333,51 +333,51 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                 text_text.setText("");
 
                 //ジェスチャ
-                int tmp_acc = 1;
-                int tmp_gyr = 1;
-                float time_diff = 0;
-                float time_tmp = 0;
-                float time_total = 0;
-
-                flag.InitializeFlag();
-                FileOutputStream fos3 = openFileOutput("acc&gyr_"+filename, Context.MODE_APPEND);
-                OutputStreamWriter osw3 = new OutputStreamWriter(fos3, "UTF-8");
-                BufferedWriter bw3 = new BufferedWriter(osw3);
-
-                bw3.write(String.format("size : %d\n", acc_save.size()));
-                bw3.write(String.format("LB,RB,RT,Ltw,Rtw,Up,Ltw_Long,Rtw_Long,Up_Long\n"));
-                bw3.write(String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-                        count.lb, count.rb, count.rt, count.ltw, count.rtw, count.up, count.ltw_l, count.rtw_l, count.up_l));
-                bw3.write("time_origin,timediff,time,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,diff_accx,diff_accy,xy_acc,integral_x,integral_y,integral_xy,integral_xy2" +
-                        ",integral_gyrx,integral_gyrz,tmp_acc,tmp_gyr,LB,RT,RB,R_tw,L_tw,Up\n");
-
-                count.InitializeCount();
-                for (i = 0; i < acc_save.size(); i++){
-                    t1 = acc_save.get(i).time;
-                    tx1 = acc_save.get(i).x;
-                    ty1 = acc_save.get(i).y;
-                    tz1 = acc_save.get(i).z;
-                    t2 = gyr_save.get(i).time;
-                    tx2 = gyr_save.get(i).x;
-                    ty2 = gyr_save.get(i).y;
-                    tz2 = gyr_save.get(i).z;
-
-                    //経過時間
-                    time_diff = t1 - time_tmp;
-                    if(time_diff < 0){
-                        time_diff += 60;
-                    }
-                    time_total += time_diff;
-                    if(i == 0){
-                        time_total = 0;
-                    }
-                    time_tmp = t1;
-
-                    bw3.write(String.format("%f,%f,%f,%f,%f,%f,%f,%f,%f \n",t1,time_diff,time_total,tx1,ty1,tz1,tx2,ty2,tz2));
-
-                }
-
-                bw3.close();
+//                int tmp_acc = 1;
+//                int tmp_gyr = 1;
+//                float time_diff = 0;
+//                float time_tmp = 0;
+//                float time_total = 0;
+//
+//                flag.InitializeFlag();
+//                FileOutputStream fos3 = openFileOutput("acc&gyr_"+filename, Context.MODE_APPEND);
+//                OutputStreamWriter osw3 = new OutputStreamWriter(fos3, "UTF-8");
+//                BufferedWriter bw3 = new BufferedWriter(osw3);
+//
+//                bw3.write(String.format("size : %d\n", acc_save.size()));
+//                bw3.write(String.format("LB,RB,RT,Ltw,Rtw,Up,Ltw_Long,Rtw_Long,Up_Long\n"));
+//                bw3.write(String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+//                        count.lb, count.rb, count.rt, count.ltw, count.rtw, count.up, count.ltw_l, count.rtw_l, count.up_l));
+//                bw3.write("time_origin,timediff,time,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,diff_accx,diff_accy,xy_acc,integral_x,integral_y,integral_xy,integral_xy2" +
+//                        ",integral_gyrx,integral_gyrz,tmp_acc,tmp_gyr,LB,RT,RB,R_tw,L_tw,Up\n");
+//
+//                count.InitializeCount();
+//                for (i = 0; i < acc_save.size(); i++){
+//                    t1 = acc_save.get(i).time;
+//                    tx1 = acc_save.get(i).x;
+//                    ty1 = acc_save.get(i).y;
+//                    tz1 = acc_save.get(i).z;
+//                    t2 = gyr_save.get(i).time;
+//                    tx2 = gyr_save.get(i).x;
+//                    ty2 = gyr_save.get(i).y;
+//                    tz2 = gyr_save.get(i).z;
+//
+//                    //経過時間
+//                    time_diff = t1 - time_tmp;
+//                    if(time_diff < 0){
+//                        time_diff += 60;
+//                    }
+//                    time_total += time_diff;
+//                    if(i == 0){
+//                        time_total = 0;
+//                    }
+//                    time_tmp = t1;
+//
+//                    bw3.write(String.format("%f,%f,%f,%f,%f,%f,%f,%f,%f \n",t1,time_diff,time_total,tx1,ty1,tz1,tx2,ty2,tz2));
+//                    acc_save.clear();
+//                    gyr_save.clear();
+//                }
+//                bw3.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (UnsupportedEncodingException e) {
@@ -385,10 +385,6 @@ public class MainActivity extends Activity  implements  SensorEventListener{
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            acc_save.clear();
-            gyr_save.clear();
-
         });
     }
 
@@ -497,9 +493,23 @@ public class MainActivity extends Activity  implements  SensorEventListener{
         }else{
             inring = 0;
         }
-        if(selected_num != selected_num_prev){
+        if(selected_num != selected_num_prev && down_position != -1){
+            if(selected_num >= 0 && selected_num <= 11){
+                if(selected_num - down_position >= 0){
+                    if(selected_num - down_position < kana.kana[down_position].length){
+                        if(kana.set(down_position,selected_num-down_position) != ""){
+                            vibrator.vibrate(50);
+                        }
+                    }
+                }else{
+                    if(selected_num - down_position + num < kana.kana[down_position].length){
+                        if(kana.set(down_position,selected_num-down_position + num) != ""){
+                            vibrator.vibrate(50);
+                        }
+                    }
+                }
+            }
             selected_num_prev = selected_num;
-            vibrator.vibrate(50);
         }
 
         text_selectNum.setText(String.valueOf(selected_num));
@@ -685,6 +695,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                 down_position = -1;
                 selected_num = -1;
                 selected_num_prev = -1;
+                set_character = "";
                 for (int i = 0; i < num; i++) {
                     textView = dispCharacter.get(i);//数字(i番目)表示
                     if(i < kana.kana.length){
