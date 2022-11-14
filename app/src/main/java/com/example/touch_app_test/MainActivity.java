@@ -50,7 +50,6 @@ public class MainActivity extends Activity  implements  SensorEventListener{
     private ActivityMainBinding binding;
     //Gesture(touch)
     private GestureDetector mGestureDetector;
-    //2022/11/07追加 start
     //acc & gyr sensor
     private SensorManager mSensorManager;
     private Sensor acc_sensor;
@@ -64,17 +63,19 @@ public class MainActivity extends Activity  implements  SensorEventListener{
     long starttime; //計測開始時間(基準時間)
     int i = 0;
 
+    float runningtime = 0;
     float diffaccx = 0;
     float diffaccy = 0;
     float accx_prev = 0;
     float accy_prev = 0;
+
+    private  String gestureResult = "";
 
     private String person_name = "test";
     private String filename = "Test01.csv";
 
     public Flag flag = new Flag();
     public Count count = new Count();
-    //2022/11/07追加 end
 
     private int state;
     int selected_num = -1;
@@ -104,7 +105,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
             int sec=0;
             int ss=0;
             int prev_ss = 0;
-            float runningtime = 0;
+            //float runningtime = 0;
             float motion_end_time = 0;
             String result = "";
             float prev=0;
@@ -213,6 +214,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                             }else if(result=="Up_long"){
                                 count.up_l++;
                             }
+                            gestureResult = result;
                             result = "";
                         }
                     }
@@ -221,6 +223,24 @@ public class MainActivity extends Activity  implements  SensorEventListener{
 
                     acc_val = new Values();
                     gyr_val = new Values();
+
+
+                    //ジェスチャ入力
+                    if(gestureResult != ""){
+                        if(gestureResult != "error"){
+                            if(gestureResult == "Ltw"){ //削除
+                                text_text.setText(text_text.getText().toString().substring(0, text_text.getText().toString().length()-1));
+                            }else if(gestureResult == "Rtw"){ //スペース
+                                text_text.append("␣");
+                            }else if(gestureResult == "Up"){ //バジリスクタイム確定
+                                text_text.append("⏎");
+                            }else{
+                                //text_text.append(gestureResult);
+                            }
+                            log_text = text_text.getText().toString();
+                        }
+                        gestureResult = "";
+                    }
                 }
             }
         }
@@ -295,14 +315,12 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                 }else{
                     log_details.get(log_details.size()-1).lastup = log_details.get(log_details.size()-1).uptime;
                     SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
-                    Date begin = df.parse(log_details.get(log_details.size()-1).firstdown);
-                    Date end = df.parse(log_details.get(log_details.size()-1).lastup);
-                    log_details.get(log_details.size()-1).input_duration = end.getTime() - begin.getTime();
+                    log_details.get(log_details.size()-1).input_duration = log_details.get(log_details.size()-1).lastup - log_details.get(log_details.size()-1).firstdown;
                     log_details.get(log_details.size()-1).text = log_text;
                     for(int i=0;i<log_details.size();i++){
                         bw2.write(String.format("%s,%s,", log_details.get(i).text, log_details.get(i).select_char));
-                        bw2.write(String.format("%d,%s,%s,", log_details.get(i).input_duration, log_details.get(i).firstdown, log_details.get(i).lastup));
-                        bw2.write(String.format("%d,%s,%s,", log_details.get(i).touch_duration, log_details.get(i).downtime, log_details.get(i).uptime));
+                        bw2.write(String.format("%f,%f,%f,", log_details.get(i).input_duration, log_details.get(i).firstdown, log_details.get(i).lastup));
+                        bw2.write(String.format("%f,%f,%f,", log_details.get(i).touch_duration, log_details.get(i).downtime, log_details.get(i).uptime));
                         bw2.write(String.format("%d,%s,%s,", log_details.get(i).down_position, log_details.get(i).down_pc.r, log_details.get(i).down_pc.degree));
                         bw2.write(String.format("%d,%s,%s", log_details.get(i).up_position, log_details.get(i).up_pc.r, log_details.get(i).up_pc.degree));
                         bw2.write("\n");
@@ -365,8 +383,6 @@ public class MainActivity extends Activity  implements  SensorEventListener{
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ParseException e) {
                 e.printStackTrace();
             }
 
@@ -577,13 +593,13 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                 }
                 selected_num = down_position;
 
-                if(log_detail_tmp.downtime == null){
+                if(log_detail_tmp.downtime == -1){
                     if(log_details.size() == 0){
-                        log_detail_tmp.firstdown = getDate();
+                        log_detail_tmp.firstdown = runningtime;
                     }else{
                         log_detail_tmp.firstdown = log_details.get(0).firstdown;
                     }
-                    log_detail_tmp.downtime = getDate();
+                    log_detail_tmp.downtime = runningtime;
                     log_detail_tmp.down_position = down_position;
                     log_detail_tmp.down_pc.r = r;
                     log_detail_tmp.down_pc.degree = degree;
@@ -651,16 +667,10 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                     log_text = text_text.getText().toString();
                 }
 
-                if(log_detail_tmp.uptime == null){
-                    log_detail_tmp.uptime = getDate();
-                    SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
-                    try {
-                        Date begin = df.parse(log_detail_tmp.downtime);
-                        Date end = df.parse(log_detail_tmp.uptime);
-                        log_detail_tmp.touch_duration = end.getTime() - begin.getTime();
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
+                if(log_detail_tmp.uptime == -1){
+                    log_detail_tmp.uptime = runningtime;
+                    log_detail_tmp.touch_duration = log_detail_tmp.uptime - log_detail_tmp.downtime;
+
                     log_detail_tmp.up_position = selected_num;
                     log_detail_tmp.up_pc.r = r;
                     log_detail_tmp.up_pc.degree = degree;
