@@ -5,6 +5,7 @@ import static java.lang.Math.toDegrees;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
@@ -13,9 +14,11 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.provider.CalendarContract;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -55,7 +58,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
     private Sensor acc_sensor;
     private Sensor gyr_sensor;
     private Sensor gravity_sensor;
-    private int button_flag = 0; //1でスタート,2で終わり
+    private int button_start_flag = 0;
     static ArrayList<Values> acc_save = new ArrayList<Values>(); //acc値保存
     static ArrayList<Values> gyr_save = new ArrayList<Values>(); //gyr値保存
     float t1,t2; //時間の一時保存用
@@ -128,7 +131,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
             TmpValue motion_val = new TmpValue();
 
 
-            while(true){
+            while(button_start_flag == 1){
                 //現在時刻取得
                 cal.setTime(new Date());
                 sec = cal.get(Calendar.SECOND);
@@ -229,7 +232,9 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                     if(gestureResult != ""){
                         if(gestureResult != "error"){
                             if(gestureResult == "Ltw"){ //削除
-                                text_text.setText(text_text.getText().toString().substring(0, text_text.getText().toString().length()-1));
+                                if(text_text.getText().toString().length() != 0){
+                                    text_text.setText(text_text.getText().toString().substring(0, text_text.getText().toString().length()-1));
+                                }
                             }else if(gestureResult == "Rtw"){ //スペース
                                 text_text.append("␣");
                             }else if(gestureResult == "Up"){ //バジリスクタイム確定
@@ -256,11 +261,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
 
         //ジェスチャ
         mSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
-        starttime = System.currentTimeMillis();
-
-        getValueThread thread1 = new getValueThread();
-        thread1.setPriority(8);
-        thread1.start();
+        //starttime = System.currentTimeMillis();
 
         //state = 0;
         text_selectNum = binding.text01;
@@ -268,7 +269,10 @@ public class MainActivity extends Activity  implements  SensorEventListener{
         text_gesture = binding.text03;
         text_gesture2 = binding.text04;
         text_text = binding.text05;
-        Button button = binding.button;
+        Button button_start = binding.buttonStart;
+        Button button_save = binding.buttonSave;
+        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
         Drawable drawable_defo = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_white_icon, null);
         Drawable drawable_selected = ResourcesCompat.getDrawable(getResources(), R.drawable.circle_selected, null);
         mGestureDetector = new GestureDetector(this, mGestureListener);
@@ -294,45 +298,73 @@ public class MainActivity extends Activity  implements  SensorEventListener{
         }
 
         //buttonを押したときの処理
-        button.setOnClickListener( v -> {
-            try {
-                FileOutputStream fos = openFileOutput(filename, Context.MODE_APPEND);
-                OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
-                BufferedWriter bw = new BufferedWriter(osw);
+        button_start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                if(button_start_flag == 0){
+                    button_start_flag = 1;
+                    button_start.setText("測定中");
+                    button_start.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN).withAlpha(200));
 
-                bw.write(String.format("Log_Input: "));
-                bw.write(String.format(String.valueOf(log_text)) + "\n");
-                bw.close();
-                //text_text.setText("");
-
-                FileOutputStream fos2 = openFileOutput("Log_"+filename, Context.MODE_APPEND);
-                OutputStreamWriter osw2 = new OutputStreamWriter(fos2, "windows-31j");
-                BufferedWriter bw2 = new BufferedWriter(osw2);
-                bw2.write(String.format(String.valueOf(log_text)) + "\n");
-                bw2.write(String.format("text,char,InputDuration,FirstDown,LastUp,TouchDuration,DownTime,UpTime,DownPosition,r,theta,UpPosition,r,theta\n"));
-                if(log_details.size() == 0){
-                    bw2.write(String.format("Empty"));
-                }else{
-                    log_details.get(log_details.size()-1).lastup = log_details.get(log_details.size()-1).uptime;
-                    SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
-                    log_details.get(log_details.size()-1).input_duration = log_details.get(log_details.size()-1).lastup - log_details.get(log_details.size()-1).firstdown;
-                    log_details.get(log_details.size()-1).text = log_text;
-                    for(int i=0;i<log_details.size();i++){
-                        bw2.write(String.format("%s,%s,", log_details.get(i).text, log_details.get(i).select_char));
-                        bw2.write(String.format("%f,%f,%f,", log_details.get(i).input_duration, log_details.get(i).firstdown, log_details.get(i).lastup));
-                        bw2.write(String.format("%f,%f,%f,", log_details.get(i).touch_duration, log_details.get(i).downtime, log_details.get(i).uptime));
-                        bw2.write(String.format("%d,%s,%s,", log_details.get(i).down_position, log_details.get(i).down_pc.r, log_details.get(i).down_pc.degree));
-                        bw2.write(String.format("%d,%s,%s", log_details.get(i).up_position, log_details.get(i).up_pc.r, log_details.get(i).up_pc.degree));
-                        bw2.write("\n");
-                    }
+                    getValueThread thread1 = new getValueThread();
+                    thread1.setPriority(8);
+                    thread1.start();
                 }
+            }
+        });
+        button_start.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v){
+                if(button_start_flag == 1){
+                    button_start_flag = 0;
+                    button_start.setText("計測開始");
+                    button_start.setBackgroundTintList(ColorStateList.valueOf(Color.GRAY).withAlpha(200));
+                    //vibrator.vibrate(1000);
+                }
+                return true;
+            }
+        });
 
-                bw2.close();
-                log_details.clear();
-                log_text = "";
-                text_text.setText("");
+        button_save.setOnClickListener( v -> {
+            if(button_start_flag == 1){
+                try {
+                    FileOutputStream fos = openFileOutput(filename, Context.MODE_APPEND);
+                    OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
+                    BufferedWriter bw = new BufferedWriter(osw);
 
-                //ジェスチャ
+                    bw.write(String.format("Log_Input: "));
+                    bw.write(String.format(String.valueOf(log_text)) + "\n");
+                    bw.close();
+                    //text_text.setText("");
+
+                    FileOutputStream fos2 = openFileOutput("Log_"+filename, Context.MODE_APPEND);
+                    OutputStreamWriter osw2 = new OutputStreamWriter(fos2, "windows-31j");
+                    BufferedWriter bw2 = new BufferedWriter(osw2);
+                    bw2.write(String.format(String.valueOf(log_text)) + "\n");
+                    bw2.write(String.format("text,char,InputDuration,FirstDown,LastUp,TouchDuration,DownTime,UpTime,DownPosition,r,theta,UpPosition,r,theta\n"));
+                    if(log_details.size() == 0){
+                        bw2.write(String.format("Empty"));
+                    }else{
+                        log_details.get(log_details.size()-1).lastup = log_details.get(log_details.size()-1).uptime;
+                        SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
+                        log_details.get(log_details.size()-1).input_duration = log_details.get(log_details.size()-1).lastup - log_details.get(log_details.size()-1).firstdown;
+                        log_details.get(log_details.size()-1).text = log_text;
+                        for(int i=0;i<log_details.size();i++){
+                            bw2.write(String.format("%s,%s,", log_details.get(i).text, log_details.get(i).select_char));
+                            bw2.write(String.format("%f,%f,%f,", log_details.get(i).input_duration, log_details.get(i).firstdown, log_details.get(i).lastup));
+                            bw2.write(String.format("%f,%f,%f,", log_details.get(i).touch_duration, log_details.get(i).downtime, log_details.get(i).uptime));
+                            bw2.write(String.format("%d,%s,%s,", log_details.get(i).down_position, log_details.get(i).down_pc.r, log_details.get(i).down_pc.degree));
+                            bw2.write(String.format("%d,%s,%s", log_details.get(i).up_position, log_details.get(i).up_pc.r, log_details.get(i).up_pc.degree));
+                            bw2.write("\n");
+                        }
+                    }
+
+                    bw2.close();
+                    log_details.clear();
+                    log_text = "";
+                    text_text.setText("");
+
+                    //ジェスチャ
 //                int tmp_acc = 1;
 //                int tmp_gyr = 1;
 //                float time_diff = 0;
@@ -378,12 +410,13 @@ public class MainActivity extends Activity  implements  SensorEventListener{
 //                    gyr_save.clear();
 //                }
 //                bw3.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -418,10 +451,6 @@ public class MainActivity extends Activity  implements  SensorEventListener{
             tx2 = event.values[0];
             ty2 = event.values[1];
             tz2 = event.values[2];
-        }
-
-        if(button_flag == 1) {
-            //mTextView.setText(String.format("LB:%d, LT:%d, RT:%d, RB:%d",count.lbtap, count.lttap, count.rttap, count.rbtap));
         }
     }
 
