@@ -37,6 +37,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -74,8 +75,8 @@ public class MainActivity extends Activity  implements  SensorEventListener{
 
     private  String gestureResult = "";
 
-    private String person_name = "test";
-    private String filename = "Test01.csv";
+    private String person_name = "hino";
+    private String filename = "HinoTest00.csv";
 
     public Flag flag = new Flag();
     public Count count = new Count();
@@ -108,7 +109,6 @@ public class MainActivity extends Activity  implements  SensorEventListener{
             int sec=0;
             int ss=0;
             int prev_ss = 0;
-            //float runningtime = 0;
             float motion_end_time = 0;
             String result = "";
             float prev=0;
@@ -243,6 +243,18 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                                 //text_text.append(gestureResult);
                             }
                             log_text = text_text.getText().toString();
+                            if(log_detail_tmp.uptime == -1){
+                                if(log_details.size() == 0){
+                                    log_detail_tmp.firstdown = runningtime;
+                                }else{
+                                    log_detail_tmp.firstdown = log_details.get(0).firstdown;
+                                }
+                                log_detail_tmp.uptime = runningtime;
+                                log_detail_tmp.select_char = gestureResult;
+                                log_detail_tmp.text = text_text.getText().toString();
+                                log_details.add(log_detail_tmp);
+                                log_detail_tmp = new Log_detail();
+                            }
                         }
                         gestureResult = "";
                     }
@@ -338,7 +350,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                     //text_text.setText("");
 
                     FileOutputStream fos2 = openFileOutput("Log_"+filename, Context.MODE_APPEND);
-                    OutputStreamWriter osw2 = new OutputStreamWriter(fos2, "windows-31j");
+                    OutputStreamWriter osw2 = new OutputStreamWriter(fos2, "UTF-8");
                     BufferedWriter bw2 = new BufferedWriter(osw2);
                     bw2.write(String.format(String.valueOf(log_text)) + "\n");
                     bw2.write(String.format("text,char,InputDuration,FirstDown,LastUp,TouchDuration,DownTime,UpTime,DownPosition,r,theta,UpPosition,r,theta\n"));
@@ -358,58 +370,58 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                             bw2.write("\n");
                         }
                     }
-
                     bw2.close();
+
+                    //ジェスチャ
+                    int tmp_acc = 1;
+                    int tmp_gyr = 1;
+                    float time_diff = 0;
+                    float time_tmp = 0;
+                    float time_total = 0;
+
+                    flag.InitializeFlag();
+                    FileOutputStream fos3 = openFileOutput("acc&gyr_"+filename, Context.MODE_APPEND);
+                    OutputStreamWriter osw3 = new OutputStreamWriter(fos3, "UTF-8");
+                    BufferedWriter bw3 = new BufferedWriter(osw3);
+
+                    bw3.write(String.format("size : %d, Input Word: %s\n", acc_save.size(), log_text));
+                    bw3.write(String.format("LB,RB,RT,Ltw,Rtw,Up,Ltw_Long,Rtw_Long,Up_Long\n"));
+                    bw3.write(String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+                            count.lb, count.rb, count.rt, count.ltw, count.rtw, count.up, count.ltw_l, count.rtw_l, count.up_l));
+                    bw3.write("time_origin,timediff,time,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,diff_accx,diff_accy,xy_acc,integral_x,integral_y,integral_xy,integral_xy2" +
+                            ",integral_gyrx,integral_gyrz,tmp_acc,tmp_gyr,LB,RT,RB,R_tw,L_tw,Up\n");
+
+                    count.InitializeCount();
+                    for (i = 0; i < acc_save.size(); i++){
+                        t1 = acc_save.get(i).time;
+                        tx1 = acc_save.get(i).x;
+                        ty1 = acc_save.get(i).y;
+                        tz1 = acc_save.get(i).z;
+                        t2 = gyr_save.get(i).time;
+                        tx2 = gyr_save.get(i).x;
+                        ty2 = gyr_save.get(i).y;
+                        tz2 = gyr_save.get(i).z;
+
+                        //経過時間
+                        time_diff = t1 - time_tmp;
+                        if(time_diff < 0){
+                            time_diff += 60;
+                        }
+                        time_total += time_diff;
+                        if(i == 0){
+                            time_total = 0;
+                        }
+                        time_tmp = t1;
+
+                        bw3.write(String.format("%f,%f,%f,%f,%f,%f,%f,%f,%f \n",t1,time_diff,time_total,tx1,ty1,tz1,tx2,ty2,tz2));
+                    }
+
                     log_details.clear();
                     log_text = "";
                     text_text.setText("");
-
-                    //ジェスチャ
-//                int tmp_acc = 1;
-//                int tmp_gyr = 1;
-//                float time_diff = 0;
-//                float time_tmp = 0;
-//                float time_total = 0;
-//
-//                flag.InitializeFlag();
-//                FileOutputStream fos3 = openFileOutput("acc&gyr_"+filename, Context.MODE_APPEND);
-//                OutputStreamWriter osw3 = new OutputStreamWriter(fos3, "UTF-8");
-//                BufferedWriter bw3 = new BufferedWriter(osw3);
-//
-//                bw3.write(String.format("size : %d\n", acc_save.size()));
-//                bw3.write(String.format("LB,RB,RT,Ltw,Rtw,Up,Ltw_Long,Rtw_Long,Up_Long\n"));
-//                bw3.write(String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-//                        count.lb, count.rb, count.rt, count.ltw, count.rtw, count.up, count.ltw_l, count.rtw_l, count.up_l));
-//                bw3.write("time_origin,timediff,time,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,diff_accx,diff_accy,xy_acc,integral_x,integral_y,integral_xy,integral_xy2" +
-//                        ",integral_gyrx,integral_gyrz,tmp_acc,tmp_gyr,LB,RT,RB,R_tw,L_tw,Up\n");
-//
-//                count.InitializeCount();
-//                for (i = 0; i < acc_save.size(); i++){
-//                    t1 = acc_save.get(i).time;
-//                    tx1 = acc_save.get(i).x;
-//                    ty1 = acc_save.get(i).y;
-//                    tz1 = acc_save.get(i).z;
-//                    t2 = gyr_save.get(i).time;
-//                    tx2 = gyr_save.get(i).x;
-//                    ty2 = gyr_save.get(i).y;
-//                    tz2 = gyr_save.get(i).z;
-//
-//                    //経過時間
-//                    time_diff = t1 - time_tmp;
-//                    if(time_diff < 0){
-//                        time_diff += 60;
-//                    }
-//                    time_total += time_diff;
-//                    if(i == 0){
-//                        time_total = 0;
-//                    }
-//                    time_tmp = t1;
-//
-//                    bw3.write(String.format("%f,%f,%f,%f,%f,%f,%f,%f,%f \n",t1,time_diff,time_total,tx1,ty1,tz1,tx2,ty2,tz2));
-//                    acc_save.clear();
-//                    gyr_save.clear();
-//                }
-//                bw3.close();
+                    acc_save.clear();
+                    gyr_save.clear();
+                    bw3.close();
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (UnsupportedEncodingException e) {
@@ -650,18 +662,23 @@ public class MainActivity extends Activity  implements  SensorEventListener{
             case MotionEvent.ACTION_UP:
                 text_gesture2.setText("Tap Up");
                 if(inring == 1 && down_position != -1 && selected_num != -1){
+                    int i = -1;
+                    int j = -1;
                     if(selected_num >= 0 && selected_num <= 11){
                         if(selected_num - down_position >= 0){
                             if(selected_num - down_position < kana.kana[down_position].length){
-                                set_character = kana.set(down_position,selected_num-down_position);
+                                i = down_position;
+                                j = selected_num-down_position;
+                                set_character = kana.set(i,j);
                             }
                         }else{
                             if(selected_num - down_position + num < kana.kana[down_position].length){
-                                set_character = kana.set(down_position,selected_num-down_position + num);
+                                i = down_position;
+                                j = selected_num-down_position+num;
+                                set_character = kana.set(i,j);
                             }
                         }
                     }
-
 
                     String tmp_text;
                     tmp_text = text_text.getText().toString();
@@ -698,6 +715,36 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                             }else if(tmp_text.endsWith("お") == true){
                                 text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
                                 text_text.append("ぉ");
+                            }
+                        }
+                    }else if(set_character == kana.set(10,1)){//濁点
+                        int row = -1;
+                        int index = 0;
+                        for(int k = 0; k < kana.kana.length; k++){
+                            Arrays.sort(kana.kana[k]);
+                            index = Arrays.binarySearch(kana.kana[k], tmp_text.substring(tmp_text.length()-1));
+                            if(index >= 0){
+                                row = k;
+                                if(!kana.kana2[row][index].isEmpty()){
+                                    text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                    text_text.append(kana.kana2[row][index]);
+                                }
+                                break;
+                            }
+                        }
+                    }else if(set_character == kana.set(10,2)){//半濁点
+                        int row = -1;
+                        int index = 0;
+                        for(int k = 0; k < kana.kana.length; k++){
+                            Arrays.sort(kana.kana[k]);
+                            index = Arrays.binarySearch(kana.kana[k], tmp_text.substring(tmp_text.length()-1));
+                            if(index >= 0){
+                                row = k;
+                                if(!kana.kana3[row][index].isEmpty()){
+                                    text_text.setText(tmp_text.substring(0, tmp_text.length()-1));
+                                    text_text.append(kana.kana3[row][index]);
+                                }
+                                break;
                             }
                         }
                     }else{
