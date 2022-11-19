@@ -1,10 +1,10 @@
 package com.example.touch_app_test;
 
 public class Threshold {
-    float acc_diff_x = (float) 1.2; //#hino:1.2;
-    float acc_diff_y = (float) 1.2; //#hino:1.2;
+    float acc_diff_x = (float) 1.5; //#hino:1.2;
+    float acc_diff_y = (float) 1.5; //#hino:1.2;
     float gyr_x = (float)5; //#hino:5;
-    float gyr_z = (float)1.2; //#hino:1.5;
+    float gyr_z = (float)1.0; //#hino:1.5;
 
     //threshold_acc_integral_xy = 2 #hino:2
     float gyr_integral_x = gyr_x * 5; //#hino:5;
@@ -15,5 +15,5 @@ public class Threshold {
     float peakinterval_tap = (float) 0.1;
 
     //判別後のinterval
-    float interval = (float)0.5;
+    float interval = (float)0.3;
 }

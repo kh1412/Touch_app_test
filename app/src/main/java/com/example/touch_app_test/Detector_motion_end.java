@@ -132,7 +132,7 @@ public class Detector_motion_end {
                         return "Up_long";
                     }
                 }else{ //例外処理
-                    return "error";
+                    return "error_Up";
                 }
             }else if(motion_val.gyr.get(motion_val.gyr.size()-1).time - flag.peaktime_gyr_x.first > flag.motion_lim){
                 return "Motion_long";
@@ -148,7 +148,7 @@ public class Detector_motion_end {
                         return "Rtw_long";
                     }
                 }else{ //例外処理
-                    return "error";
+                    return "error_Rtw";
                 }
             }else if(motion_val.gyr.get(motion_val.gyr.size()-1).time - flag.peaktime_gyr_z.first > flag.motion_lim){
                 return "Motion_long";
@@ -164,7 +164,7 @@ public class Detector_motion_end {
                         return "Ltw_long";
                     }
                 }else{
-                    return "error";
+                    return "error_Ltw";
                 }
             }else if(motion_val.gyr.get(motion_val.gyr.size()-1).time - flag.peaktime_gyr_z.first > flag.motion_lim){
                 return "Motion_long";
@@ -184,12 +184,12 @@ public class Detector_motion_end {
                         if(flag.motion.acc.x < 0 && flag.motion.acc.y > 0){ //RB
                             return "RB";
                         }else{
-                            return "error";
+                            return "error_TapRT";
                         }
                     }
                 }
             }else{
-                return "error";
+                return "error_Tap";
             }
         }
 

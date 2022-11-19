@@ -75,8 +75,10 @@ public class MainActivity extends Activity  implements  SensorEventListener{
 
     private  String gestureResult = "";
 
+    private boolean useGesture = false ;
     private String person_name = "hino";
-    private String filename = "HinoTest00.csv";
+    private String filename = (useGesture ? person_name + "_useG": person_name);
+
 
     public Flag flag = new Flag();
     public Count count = new Count();
@@ -161,66 +163,72 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                     Detector_motion_end motion_end = new Detector_motion_end(motion_val, flag, threshold);
 
                     //判別アルゴリズム_start
-                    if(flag.motion.motion == 0){
-                        if(motion_start.DetectMotion() == 1){
-                            Log.d(TAG, "start");
+                    if(useGesture){
+                        if(flag.motion.motion == 0){
+                            if(motion_start.DetectMotion() == 1){
+                                Log.d(TAG, "start");
+                                motion_val.addValues(acc_val, gyr_val);
+                                //flag.motion.motion = 1;
+                                flag.count++;
+                            }
+                        }else if(flag.motion.motion == 1){
                             motion_val.addValues(acc_val, gyr_val);
-                            //flag.motion.motion = 1;
                             flag.count++;
-                        }
-                    }else if(flag.motion.motion == 1){
-                        motion_val.addValues(acc_val, gyr_val);
-                        flag.count++;
-                        //判別結果
-                        result = motion_end.DetectMotionEnd();
-                        if(result != ""){
-                            if(result == "Motion_long"){
-                                ((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(10);
+                            //判別結果
+                            result = motion_end.DetectMotionEnd();
+                            if(result != ""){
+                                if(result == "Motion_long"){
+                                    ((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(10);
+                                }else{
+                                    flag.motion.motion = 2;
+                                    motion_end_time = runningtime;
+                                }
+                            }
+                        }else if(flag.motion.motion == 2){
+                            if(runningtime - motion_end_time < threshold.interval){
+                                if(result=="LB"){
+                                }else if(result=="RB"){
+                                }else if(result=="RT"){
+                                }else if(result=="Ltw"){
+                                }else if(result=="Rtw"){
+                                }else if(result=="Up"){
+                                }else if(result=="Ltw_long"){
+                                }else if(result=="Rtw_long"){
+                                }else if(result=="Up_long"){
+                                }else if(result == "error"){
+                                }
                             }else{
-                                flag.motion.motion = 2;
-                                motion_end_time = runningtime;
+                                Log.d(TAG, "end");
+                                motion_val.initValue();
+                                flag.InitializeFlag();
+                                gestureResult = result;
+                                text_gesture2.setText(gestureResult);
+
+                                if(result=="LB"){
+                                    count.lb++;
+                                }else if(result=="RB"){
+                                    count.rb++;
+                                }else if(result=="RT"){
+                                    count.rt++;
+                                }else if(result=="Ltw"){
+                                    count.ltw++;
+                                }else if(result=="Rtw"){
+                                    count.rtw++;
+                                }else if(result=="Up"){
+                                    count.up++;
+                                }else if(result=="Ltw_long"){
+                                    count.ltw_l++;
+                                }else if(result=="Rtw_long"){
+                                    count.rtw_l++;
+                                }else if(result=="Up_long"){
+                                    count.up_l++;
+                                }
+
+                                result = "";
                             }
-                        }
-                    }else if(flag.motion.motion == 2){
-                        if(runningtime - motion_end_time < threshold.interval){
-                            if(result=="LB"){
-                            }else if(result=="RB"){
-                            }else if(result=="RT"){
-                            }else if(result=="Ltw"){
-                            }else if(result=="Rtw"){
-                            }else if(result=="Up"){
-                            }else if(result=="Ltw_long"){
-                            }else if(result=="Rtw_long"){
-                            }else if(result=="Up_long"){
-                            }else if(result == "error"){
-                            }
-                        }else{
-                            Log.d(TAG, "end");
-                            motion_val.initValue();
-                            flag.InitializeFlag();
-                            if(result=="LB"){
-                                count.lb++;
-                            }else if(result=="RB"){
-                                count.rb++;
-                            }else if(result=="RT"){
-                                count.rt++;
-                            }else if(result=="Ltw"){
-                                count.ltw++;
-                            }else if(result=="Rtw"){
-                                count.rtw++;
-                            }else if(result=="Up"){
-                                count.up++;
-                            }else if(result=="Ltw_long"){
-                                count.ltw_l++;
-                            }else if(result=="Rtw_long"){
-                                count.rtw_l++;
-                            }else if(result=="Up_long"){
-                                count.up_l++;
-                            }
-                            gestureResult = result;
-                            result = "";
                         }
                     }
+
                     accx_prev = tx1;
                     accy_prev = ty1;
 
@@ -231,13 +239,13 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                     //ジェスチャ入力
                     if(gestureResult != ""){
                         if(gestureResult != "error"){
-                            if(gestureResult == "Ltw"){ //削除
+                            if(gestureResult == "Ltw" || gestureResult == "Ltw_long"){ //削除
                                 if(text_text.getText().toString().length() != 0){
                                     text_text.setText(text_text.getText().toString().substring(0, text_text.getText().toString().length()-1));
                                 }
-                            }else if(gestureResult == "Rtw"){ //スペース
+                            }else if(gestureResult == "Rtw" || gestureResult == "Rtw_long"){ //スペース
                                 text_text.append("␣");
-                            }else if(gestureResult == "Up"){ //バジリスクタイム確定
+                            }else if(gestureResult == "Up" || gestureResult == "Up_long"){ //バジリスクタイム確定
                                 text_text.append("⏎");
                             }else{
                                 //text_text.append(gestureResult);
@@ -340,7 +348,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
         button_save.setOnClickListener( v -> {
             if(button_start_flag == 1){
                 try {
-                    FileOutputStream fos = openFileOutput(filename, Context.MODE_APPEND);
+                    FileOutputStream fos = openFileOutput(filename + ".csv", Context.MODE_APPEND);
                     OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
                     BufferedWriter bw = new BufferedWriter(osw);
 
@@ -349,7 +357,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                     bw.close();
                     //text_text.setText("");
 
-                    FileOutputStream fos2 = openFileOutput("Log_"+filename, Context.MODE_APPEND);
+                    FileOutputStream fos2 = openFileOutput(filename + "_Log.csv", Context.MODE_APPEND);
                     OutputStreamWriter osw2 = new OutputStreamWriter(fos2, "UTF-8");
                     BufferedWriter bw2 = new BufferedWriter(osw2);
                     bw2.write(String.format(String.valueOf(log_text)) + "\n");
@@ -380,7 +388,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                     float time_total = 0;
 
                     flag.InitializeFlag();
-                    FileOutputStream fos3 = openFileOutput("acc&gyr_"+filename, Context.MODE_APPEND);
+                    FileOutputStream fos3 = openFileOutput(filename + "_SensorVal.csv", Context.MODE_APPEND);
                     OutputStreamWriter osw3 = new OutputStreamWriter(fos3, "UTF-8");
                     BufferedWriter bw3 = new BufferedWriter(osw3);
 
@@ -761,7 +769,7 @@ public class MainActivity extends Activity  implements  SensorEventListener{
                     log_detail_tmp.up_pc.r = r;
                     log_detail_tmp.up_pc.degree = degree;
                     log_detail_tmp.select_char = set_character;
-                    log_detail_tmp.text = text_text.getText().toString();;
+                    log_detail_tmp.text = text_text.getText().toString();
                     log_details.add(log_detail_tmp);
                     log_detail_tmp = new Log_detail();
                 }
