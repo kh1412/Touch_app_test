@@ -75,8 +75,8 @@ public class MainActivity extends Activity  implements  SensorEventListener{
 
     private  String gestureResult = "";
 
-    private boolean useGesture = false ;
-    private String person_name = "hino";
+    private boolean useGesture = true;
+    private String person_name = "test";
     private String filename = (useGesture ? person_name + "_useG": person_name);
 
 
